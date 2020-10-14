@@ -13,7 +13,7 @@ class MNIST:
             self.N = self.x.shape[0]
 
     def __init__(self):
-        root = "./mnist"
+        root = "./data/mnist"
         trn = torchvision.datasets.MNIST(root, train=True, transform=transforms.Compose([
                 transforms.ToTensor(),
                 transforms.Normalize((0.1307,), (0.3081,))

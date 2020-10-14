@@ -1,4 +1,5 @@
-
+import matplotlib.pyplot as plt
+import numpy as np
 import os
 import json
 import argparse
@@ -10,6 +11,8 @@ from bnaf import *
 from tqdm import tqdm
 from optim.adam import Adam
 from optim.lr_scheduler import ReduceLROnPlateau
+import scipy.stats as stats
+
 
 from data.gas import GAS
 from data.bsds300 import BSDS300
@@ -18,6 +21,7 @@ from data.miniboone import MINIBOONE
 from data.power import POWER
 from data.mnist import MNIST
 from data.fashionmnist import FASHIONMNIST
+import time
 
 NAF_PARAMS = {
     'power': (414213, 828258),
@@ -134,6 +138,9 @@ def compute_log_p_x(model, x_mb):
     log_p_y_mb = torch.distributions.Normal(torch.zeros_like(y_mb), torch.ones_like(y_mb)).log_prob(y_mb).sum(-1)
     return log_p_y_mb + log_diag_j_mb
 
+def negative_log_prob(model, x_mb):
+    return -1*compute_log_p_x(model=model, x_mb=x_mb)
+
 
 def train(model, optimizer, scheduler, data_loader_train, data_loader_valid, data_loader_test, args):
     
@@ -226,6 +233,7 @@ def main():
     parser.add_argument('--load', type=str, default=None)
     parser.add_argument('--save', action='store_true')
     parser.add_argument('--tensorboard', type=str, default='tensorboard')
+    parser.add_argument('--dataset_type', type=str, default="train")
     
     args = parser.parse_args()
 
@@ -238,14 +246,20 @@ def main():
         str(datetime.datetime.now())[:-7].replace(' ', '-').replace(':', '-')))
 
     print('Loading dataset..')
-    data_loader_train, data_loader_valid, data_loader_test = load_dataset(args)
-    
-    if args.save and not args.load:
-        print('Creating directory experiment..')
-        print(args.path)
-        os.mkdir(args.path)
-        with open(os.path.join(args.path, 'args.json'), 'w') as f:
-            json.dump(args.__dict__, f, indent=4, sort_keys=True)
+    args.batch_dim = 200
+    data_loader_train, data_loader_valid, _ = load_dataset(args)
+    if(args.dataset_type == "train"):
+        data_loader = data_loader_train
+    elif(args.dataset_type == "valid"):
+        data_loader = data_loader_valid
+    else:
+        raise Exception()
+    #if args.save and not args.load:
+    #    print('Creating directory experiment..')
+    #    print(args.path)
+    #    os.mkdir(args.path)
+    #    with open(os.path.join(args.path, 'args.json'), 'w') as f:
+    #        json.dump(args.__dict__, f, indent=4, sort_keys=True)
     
     print('Creating BNAF model..')
     model = create_model(args, verbose=True)
@@ -254,18 +268,17 @@ def main():
     optimizer = Adam(model.parameters(), lr=args.learning_rate, amsgrad=True, polyak=args.polyak)
     
     print('Creating scheduler..')
-    scheduler = ReduceLROnPlateau(optimizer, factor=args.decay,
-                                  patience=args.patience, cooldown=args.cooldown,
-                                  min_lr=args.min_lr, verbose=True,
-                                  early_stopping=args.early_stopping,
-                                  threshold_mode='abs')
+    load_model(model, optimizer, args, load_start_epoch=True)()
+    new_dir_path = f"./saved_plot_tensor_{str(datetime.datetime.now())[:-7].replace(' ', '-').replace(':', '-')}/" 
+    os.mkdir(path=new_dir_path)
+    os.mkdir(path=f"{new_dir_path}{args.dataset}_{args.dataset_type}/")
 
-    args.start_epoch = 0
-    if args.load:
-        load_model(model, optimizer, args, load_start_epoch=True)()
-                
-    print('Training..')
-    train(model, optimizer, scheduler, data_loader_train, data_loader_valid, data_loader_test, args)
+    for index, (x,) in enumerate(data_loader):
+        py_map = {"data":negative_log_prob(model, x)}
+        torch.save(py_map, f"{new_dir_path}{args.dataset}_{args.dataset_type}/tensor_{index}")
+
+    
+    model = None
 
 
 if __name__ == '__main__':

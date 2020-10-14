@@ -1,4 +1,5 @@
-
+import matplotlib.pyplot as plt
+import numpy as np
 import os
 import json
 import argparse
@@ -10,6 +11,8 @@ from bnaf import *
 from tqdm import tqdm
 from optim.adam import Adam
 from optim.lr_scheduler import ReduceLROnPlateau
+import scipy.stats as stats
+
 
 from data.gas import GAS
 from data.bsds300 import BSDS300
@@ -18,6 +21,7 @@ from data.miniboone import MINIBOONE
 from data.power import POWER
 from data.mnist import MNIST
 from data.fashionmnist import FASHIONMNIST
+import time
 
 NAF_PARAMS = {
     'power': (414213, 828258),
@@ -204,68 +208,47 @@ def main():
     parser.add_argument('--dataset', type=str, default='miniboone',
                         choices=['gas', 'bsds300', 'hepmass', 'miniboone', 'power', 'fashionmnist', 'mnist'])
 
-    parser.add_argument('--learning_rate', type=float, default=1e-2)
-    parser.add_argument('--batch_dim', type=int, default=200)
-    parser.add_argument('--clip_norm', type=float, default=0.1)
-    parser.add_argument('--epochs', type=int, default=1000)
-    
-    parser.add_argument('--patience', type=int, default=20)
-    parser.add_argument('--cooldown', type=int, default=10)
-    parser.add_argument('--early_stopping', type=int, default=100)
-    parser.add_argument('--decay', type=float, default=0.5)
-    parser.add_argument('--min_lr', type=float, default=5e-4)
-    parser.add_argument('--polyak', type=float, default=0.998)
-
-    parser.add_argument('--flows', type=int, default=5)
-    parser.add_argument('--layers', type=int, default=1)
-    parser.add_argument('--hidden_dim', type=int, default=10)
-    parser.add_argument('--residual', type=str, default='gated',
-                       choices=[None, 'normal', 'gated'])
-
     parser.add_argument('--expname', type=str, default='')
     parser.add_argument('--load', type=str, default=None)
-    parser.add_argument('--save', action='store_true')
-    parser.add_argument('--tensorboard', type=str, default='tensorboard')
+    parser.add_argument('-tfs','--tensor_folders', nargs='+', help='<Required> Set flag', required=True)
+    parser.add_argument("--title", type=str, default="<title>")
     
     args = parser.parse_args()
 
-    print('Arguments:')
-    pprint.pprint(args.__dict__)
-
-    args.path = os.path.join('checkpoint', '{}{}_layers{}_h{}_flows{}{}_{}'.format(
-        args.expname + ('_' if args.expname != '' else ''),
-        args.dataset, args.layers, args.hidden_dim, args.flows, '_' + args.residual if args.residual else '',
-        str(datetime.datetime.now())[:-7].replace(' ', '-').replace(':', '-')))
-
-    print('Loading dataset..')
-    data_loader_train, data_loader_valid, data_loader_test = load_dataset(args)
-    
-    if args.save and not args.load:
-        print('Creating directory experiment..')
-        print(args.path)
-        os.mkdir(args.path)
-        with open(os.path.join(args.path, 'args.json'), 'w') as f:
-            json.dump(args.__dict__, f, indent=4, sort_keys=True)
-    
-    print('Creating BNAF model..')
-    model = create_model(args, verbose=True)
-
-    print('Creating optimizer..')
-    optimizer = Adam(model.parameters(), lr=args.learning_rate, amsgrad=True, polyak=args.polyak)
-    
-    print('Creating scheduler..')
-    scheduler = ReduceLROnPlateau(optimizer, factor=args.decay,
-                                  patience=args.patience, cooldown=args.cooldown,
-                                  min_lr=args.min_lr, verbose=True,
-                                  early_stopping=args.early_stopping,
-                                  threshold_mode='abs')
-
-    args.start_epoch = 0
-    if args.load:
-        load_model(model, optimizer, args, load_start_epoch=True)()
-                
-    print('Training..')
-    train(model, optimizer, scheduler, data_loader_train, data_loader_valid, data_loader_test, args)
+    histogram_data_arrays = []
+    for folder_path in args.tensor_folders:
+        tensor_array = []
+        for i, _ in enumerate(os.listdir(folder_path)):
+            tensor_array += (torch.load(f"{folder_path}/tensor_{i}")["data"].squeeze().tolist())
+        histogram_data_arrays.append(tensor_array)
+    hist_colors = []
+    prop_cycle = plt.rcParams['axes.prop_cycle']
+    for index, new_color in enumerate(prop_cycle.by_key()['color']):
+        if(index >= len(args.tensor_folders)):
+            break
+        hist_colors.append(new_color)
+    print(f"histogram_data_arrays {histogram_data_arrays}")
+    #histogram_data_arrays = np.array(histogram_data_arrays)
+    print(f"histogram_data_arrays {len(histogram_data_arrays)}")
+    plot_title = args.title
+    plt.title(f"{plot_title}")
+    n, x, _ = plt.hist(histogram_data_arrays,
+                       density=True,
+                       bins = int(40),
+                       label=[tf.split("\\")[-1] for tf in args.tensor_folders],
+                       alpha=0.5,
+                       histtype="stepfilled",
+                       color=hist_colors)
+    densities = [stats.gaussian_kde(ys) for ys in histogram_data_arrays]
+    #density_plot_data = ((x, density(x)) for density in densities)
+    #plt.plot(density_plot_data)
+    for i, density in enumerate(densities):
+        plt.plot(x, density(x), color=hist_colors[i])
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+    #print('Training..')
+    #train(model, optimizer, scheduler, data_loader_train, data_loader_valid, data_loader_test, args)
 
 
 if __name__ == '__main__':
