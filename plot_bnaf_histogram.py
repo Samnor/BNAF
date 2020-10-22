@@ -246,6 +246,8 @@ def main():
         plt.plot(x, density(x), color=hist_colors[i])
     plt.grid(True)
     plt.legend()
+    #plt.xlim(-6000, 0)
+    #plt.ylim(0, 0.0010)
     plt.show()
     #print('Training..')
     #train(model, optimizer, scheduler, data_loader_train, data_loader_valid, data_loader_test, args)

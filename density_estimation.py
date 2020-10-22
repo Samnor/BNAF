@@ -18,6 +18,10 @@ from data.miniboone import MINIBOONE
 from data.power import POWER
 from data.mnist import MNIST
 from data.fashionmnist import FASHIONMNIST
+from data.fashionmnist_aug import FASHIONMNISTAUG
+
+import torchvision
+from torchvision import datasets, transforms
 
 NAF_PARAMS = {
     'power': (414213, 828258),
@@ -26,7 +30,8 @@ NAF_PARAMS = {
     'miniboone': (7487321, 14970256),
     'bsds300': (36759591, 73510236),
     'fashionmnist': (1337, 1337),
-    'mnist': (1337, 1337)
+    'mnist': (1337, 1337),
+    'fashionmnistaug': (1337, 1337)
 }
 
 
@@ -45,6 +50,8 @@ def load_dataset(args):
         dataset = MNIST()
     elif args.dataset == 'fashionmnist':
         dataset = FASHIONMNIST()
+    elif args.dataset == 'fashionmnistaug':
+        dataset = FASHIONMNISTAUG()
     else:
         raise RuntimeError()
 
@@ -61,6 +68,7 @@ def load_dataset(args):
     data_loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_dim, shuffle=False)
     
     args.n_dims = dataset.n_dims
+    print(f"N dims! {args.n_dims}")
     
     return data_loader_train, data_loader_valid, data_loader_test
 
@@ -143,10 +151,9 @@ def train(model, optimizer, scheduler, data_loader_train, data_loader_valid, dat
         
     epoch = args.start_epoch
     for epoch in range(args.start_epoch, args.start_epoch + args.epochs):
-
         t = tqdm(data_loader_train, smoothing=0, ncols=80)
         train_loss = []
-        
+
         for x_mb, in t:
             loss = - compute_log_p_x(model, x_mb).mean()
 
@@ -202,7 +209,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', type=str, default='cuda:0')
     parser.add_argument('--dataset', type=str, default='miniboone',
-                        choices=['gas', 'bsds300', 'hepmass', 'miniboone', 'power', 'fashionmnist', 'mnist'])
+                        choices=['gas', 'bsds300', 'hepmass', 'miniboone', 'power', 'fashionmnist', 'mnist', 'fashionmnistaug'])
 
     parser.add_argument('--learning_rate', type=float, default=1e-2)
     parser.add_argument('--batch_dim', type=int, default=200)
