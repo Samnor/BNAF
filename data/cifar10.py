@@ -14,17 +14,15 @@ class CIFAR10:
 
     def __init__(self):
         root = "./data/cifar10"
-        trn = torchvision.datasets.CIFAR10(root, train=True, transform=transforms.Compose([
+        our_transforms = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]), target_transform=None, download=True)
+                transforms.Normalize(mean=[0.5], std=[0.5]),
+                ])
+        trn = torchvision.datasets.CIFAR10(root, train=True, transform=our_transforms, target_transform=None, download=True)
         # test_loader = DataLoader(test_dataset, batch_size=len(test_dataset))
 
         trn = next(iter(DataLoader(trn, batch_size=len(trn))))[0].numpy()
-        tst = torchvision.datasets.CIFAR10(root, train=False, transform=transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]), target_transform=None, download=True)
+        tst = torchvision.datasets.CIFAR10(root, train=False, transform=our_transforms, target_transform=None, download=True)
         tst = next(iter(DataLoader(tst, batch_size=len(tst))))[0].numpy()
         #trn, val, tst = load_data_normalised(file)
         print(f"self.trn: {trn.shape}")
@@ -41,4 +39,4 @@ class CIFAR10:
 
         self.n_dims = self.trn.x.shape[1]
 
-#asdf = CIFAR10()
+asdf = CIFAR10()

@@ -30,7 +30,9 @@ NAF_PARAMS = {
     'miniboone': (7487321, 14970256),
     'bsds300': (36759591, 73510236),
     'fashionmnist': (1337, 1337),
-    'mnist': (1337, 1337)
+    'mnist': (1337, 1337),
+    'svhn': (1337, 1337),
+    'cifar10': (1337, 1337)
 }
 
 
@@ -47,8 +49,12 @@ def load_dataset(args):
         dataset = POWER('data/power/data.npy')
     elif args.dataset == 'mnist':
         dataset = MNIST()
-    elif args.dataset == 'fashionmnist':
+    elif args.dataset == 'fmnist':
         dataset = FASHIONMNIST()
+    elif args.dataset == 'svhn':
+        dataset = SVHN()
+    elif args.dataset == 'cifar10':
+        dataset = CIFAR10()
     else:
         raise RuntimeError()
 
@@ -247,7 +253,7 @@ def main():
     plt.grid(True)
     plt.legend()
     #plt.xlim(-6000, 0)
-    #plt.ylim(0, 0.0010)
+    plt.ylim(0, 0.0010)
     plt.show()
     #print('Training..')
     #train(model, optimizer, scheduler, data_loader_train, data_loader_valid, data_loader_test, args)

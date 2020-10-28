@@ -14,17 +14,17 @@ class SVHN:
 
     def __init__(self):
         root = "./data/svhn"
-        trn = torchvision.datasets.SVHN(root, split='train', transform=transforms.Compose([
+
+        our_transforms = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]), target_transform=None, download=True)
+                transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                ])
+
+        trn = torchvision.datasets.SVHN(root, split='train', transform=our_transforms, target_transform=None, download=True)
         # test_loader = DataLoader(test_dataset, batch_size=len(test_dataset))
 
         trn = next(iter(DataLoader(trn, batch_size=len(trn))))[0].numpy()
-        tst = torchvision.datasets.SVHN(root, split='test', transform=transforms.Compose([
-                transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]), target_transform=None, download=True)
+        tst = torchvision.datasets.SVHN(root, split='test', transform=our_transforms, target_transform=None, download=True)
         tst = next(iter(DataLoader(tst, batch_size=len(tst))))[0].numpy()
         #trn, val, tst = load_data_normalised(file)
         print(f"self.trn: {trn.shape}")

@@ -29,9 +29,9 @@ NAF_PARAMS = {
     'hepmass': (9272743, 18544268),
     'miniboone': (7487321, 14970256),
     'bsds300': (36759591, 73510236),
-    'fashionmnist': (1337, 1337),
+    'fmnist': (1337, 1337),
     'mnist': (1337, 1337),
-    'fashionmnistaug': (1337, 1337)
+    'fmnistaug': (1337, 1337)
 }
 
 
@@ -48,9 +48,9 @@ def load_dataset(args):
         dataset = POWER('data/power/data.npy')
     elif args.dataset == 'mnist':
         dataset = MNIST()
-    elif args.dataset == 'fashionmnist':
+    elif args.dataset == 'fmnist':
         dataset = FASHIONMNIST()
-    elif args.dataset == 'fashionmnistaug':
+    elif args.dataset == 'fmnistaug':
         dataset = FASHIONMNISTAUG()
     else:
         raise RuntimeError()
@@ -209,7 +209,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', type=str, default='cuda:0')
     parser.add_argument('--dataset', type=str, default='miniboone',
-                        choices=['gas', 'bsds300', 'hepmass', 'miniboone', 'power', 'fashionmnist', 'mnist', 'fashionmnistaug'])
+                        choices=['gas', 'bsds300', 'hepmass', 'miniboone', 'power', 'fmnist', 'mnist', 'fmnistaug'])
 
     parser.add_argument('--learning_rate', type=float, default=1e-2)
     parser.add_argument('--batch_dim', type=int, default=200)
@@ -273,6 +273,7 @@ def main():
                 
     print('Training..')
     train(model, optimizer, scheduler, data_loader_train, data_loader_valid, data_loader_test, args)
+    #load_model(model, optimizer, args, load_start_epoch=True)()
 
 
 if __name__ == '__main__':
