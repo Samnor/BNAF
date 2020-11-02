@@ -19,6 +19,7 @@ from data.power import POWER
 from data.mnist import MNIST
 from data.fashionmnist import FASHIONMNIST
 from data.fashionmnist_aug import FASHIONMNISTAUG
+from data.fashionmnist_efficient import FASHIONMNISTEFFICIENT
 
 import torchvision
 from torchvision import datasets, transforms
@@ -31,7 +32,8 @@ NAF_PARAMS = {
     'bsds300': (36759591, 73510236),
     'fmnist': (1337, 1337),
     'mnist': (1337, 1337),
-    'fmnistaug': (1337, 1337)
+    'fmnistaug': (1337, 1337),
+    'fmnistefficient': (1337, 1337),
 }
 
 
@@ -52,6 +54,8 @@ def load_dataset(args):
         dataset = FASHIONMNIST()
     elif args.dataset == 'fmnistaug':
         dataset = FASHIONMNISTAUG()
+    elif args.dataset == 'fmnistefficient':
+        dataset = FASHIONMNISTEFFICIENT()
     else:
         raise RuntimeError()
 
@@ -209,7 +213,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', type=str, default='cuda:0')
     parser.add_argument('--dataset', type=str, default='miniboone',
-                        choices=['gas', 'bsds300', 'hepmass', 'miniboone', 'power', 'fmnist', 'mnist', 'fmnistaug'])
+                        choices=['gas', 'bsds300', 'hepmass', 'miniboone', 'power', 'fmnist', 'mnist', 'fmnistaug', 'fmnistefficient'])
 
     parser.add_argument('--learning_rate', type=float, default=1e-2)
     parser.add_argument('--batch_dim', type=int, default=200)

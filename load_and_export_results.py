@@ -27,6 +27,11 @@ from data.svhn import SVHN
 from data.cifar10 import CIFAR10
 from data.cifar10_grayscale import CIFAR10GRAYSCALE
 from data.svhn_grayscale import SVHNGRAYSCALE
+from data.fashionmnist_efficient import FASHIONMNISTEFFICIENT
+from data.mnist_efficient import MNISTEFFICIENT
+from data.svhn_grayscale_efficient import SVHNGRAYSCALEEFFICIENT
+from data.cifar10_grayscale_efficient import CIFAR10GRAYSCALEEFFICIENT
+
 import time
 import ast
 import json
@@ -44,7 +49,11 @@ NAF_PARAMS = {
     'svhngray': (1337, 1337),
     'cifar10gray': (1337, 1337),
     'fmnistaug': (1337, 1337),
-    'mnistaug': (1337, 1337)
+    'mnistaug': (1337, 1337),
+    'fmnistefficient': (1337, 1337),
+    'mnistefficient': (1337, 1337),
+    'cifar10efficient': (1337, 1337),
+    'svhnefficient': (1337, 1337)
 }
 
 
@@ -75,6 +84,14 @@ def load_dataset(args):
         dataset = FASHIONMNISTAUG()
     elif args.dataset == 'mnistaug':
         dataset = MNISTAUG()
+    elif args.dataset == 'fmnistefficient':
+        dataset = FASHIONMNISTEFFICIENT()
+    elif args.dataset == 'mnistefficient':
+        dataset = MNISTEFFICIENT()
+    elif args.dataset == 'cifar10efficient':
+        dataset = CIFAR10GRAYSCALEEFFICIENT()
+    elif args.dataset == 'svhnefficient':
+        dataset = SVHNGRAYSCALEEFFICIENT()
     else:
         raise RuntimeError()
 
@@ -181,7 +198,11 @@ def main():
                                  'cifar10gray',
                                  'svhngray',
                                  'fmnistaug',
-                                 'mnistaug'])
+                                 'mnistaug',
+                                 'fmnistefficient',
+                                 'mnistefficient',
+                                 'cifar10efficient',
+                                 'svhnefficient'])
 
     parser.add_argument('--learning_rate', type=float, default=1e-2)
     parser.add_argument('--batch_dim', type=int, default=200)
